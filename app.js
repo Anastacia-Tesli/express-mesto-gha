@@ -35,6 +35,10 @@ app.use((req, res, next) => {
 app.use('/users', require('./routes/users'));
 app.use('/cards', require('./routes/cards'));
 
+app.use((req, res) => {
+  res.status(NOT_FOUND_ERROR_CODE).send({ message: 'Страница не найдена.' });
+});
+
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);
 });
