@@ -44,8 +44,8 @@ module.exports.deleteCardById = (req, res) => {
       }
       if (err.name === 'CastError') {
         return res
-          .status(NOT_FOUND_ERROR_CODE)
-          .send({ message: 'Карточка с указанным _id не найдена.' });
+          .status(INCORRECT_ERROR_CODE)
+          .send({ message: 'Переданы некорректные данные карточки.' });
       }
       return res.status(DEFAULT_ERROR_CODE).send({ message: DEFAULT_ERROR_MESSAGE });
     });
@@ -69,8 +69,8 @@ module.exports.putLike = (req, res) => {
       }
       if (err.name === 'CastError') {
         return res
-          .status(NOT_FOUND_ERROR_CODE)
-          .send({ message: 'Передан несуществующий _id карточки.' });
+          .status(INCORRECT_ERROR_CODE)
+          .send({ message: 'Переданы некорректные данные для снятия лайка.' });
       }
       return res.status(DEFAULT_ERROR_CODE).send({ message: DEFAULT_ERROR_MESSAGE });
     });
@@ -78,7 +78,6 @@ module.exports.putLike = (req, res) => {
 
 module.exports.deleteLike = (req, res) => {
   Card.findByIdAndUpdate(req.params.cardId, { $pull: { likes: req.user._id } }, { new: true })
-    .then((card) => res.send({ data: card }))
     .then((card) => {
       if (card === null) {
         return res
@@ -95,8 +94,8 @@ module.exports.deleteLike = (req, res) => {
       }
       if (err.name === 'CastError') {
         return res
-          .status(NOT_FOUND_ERROR_CODE)
-          .send({ message: 'Передан несуществующий _id карточки.' });
+          .status(INCORRECT_ERROR_CODE)
+          .send({ message: 'Переданы некорректные данные для снятия лайка.' });
       }
       return res.status(DEFAULT_ERROR_CODE).send({ message: DEFAULT_ERROR_MESSAGE });
     });
