@@ -1,34 +1,39 @@
 const User = require('../models/user');
-const { INCORRECT_ERROR_CODE, NOT_FOUND_ERROR_CODE, DEFAULT_ERROR_CODE } = require('../app');
+const {
+  INCORRECT_ERROR_CODE,
+  NOT_FOUND_ERROR_CODE,
+  DEFAULT_ERROR_CODE,
+  DEFAULT_ERROR_MESSAGE,
+} = require('../utils/constants');
 
 module.exports.createUser = (req, res) => {
   const { name, about, avatar } = req.body;
   User.create({ name, about, avatar })
     .then((user) => res.send({ data: user }))
     .catch((err) => {
-      if (err.name === 'IncorrectError') {
+      if (err.name === 'ValidationError') {
         return res
           .status(INCORRECT_ERROR_CODE)
           .send({ message: 'Переданы некорректные данные при создании пользователя.' });
       }
-      return res.status(DEFAULT_ERROR_CODE).send({ message: 'Ошибка по умолчанию.' });
+      return res.status(DEFAULT_ERROR_CODE).send({ message: DEFAULT_ERROR_MESSAGE });
     });
 };
 
 module.exports.getUsers = (req, res) => {
   User.find({})
     .then((user) => res.send({ data: user }))
-    .catch(() => res.status(DEFAULT_ERROR_CODE).send({ message: 'Ошибка по умолчанию.' }));
+    .catch(() => res.status(DEFAULT_ERROR_CODE).send({ message: DEFAULT_ERROR_MESSAGE }));
 };
 
 module.exports.getUserById = (req, res) => {
   User.findById(req.params.userId)
     .then((user) => res.send({ data: user }))
     .catch((err) => {
-      if (err.name === 'NotFoundError') {
+      if (err.name === 'CastError') {
         return res.status(NOT_FOUND_ERROR_CODE).send({ message: 'Пользователь по указанному _id не найден.' });
       }
-      return res.status(DEFAULT_ERROR_CODE).send({ message: 'Ошибка по умолчанию.' });
+      return res.status(DEFAULT_ERROR_CODE).send({ message: DEFAULT_ERROR_MESSAGE });
     });
 };
 
@@ -44,15 +49,15 @@ module.exports.updateUser = (req, res) => {
   )
     .then((user) => res.send({ data: user }))
     .catch((err) => {
-      if (err.name === 'IncorrectError') {
+      if (err.name === 'ValidationError') {
         return res
           .status(INCORRECT_ERROR_CODE)
           .send({ message: 'Переданы некорректные данные при обновлении профиля.' });
       }
-      if (err.name === 'NotFoundError') {
+      if (err.name === 'CastError') {
         return res.status(NOT_FOUND_ERROR_CODE).send({ message: 'Пользователь по указанному _id не найден.' });
       }
-      return res.status(DEFAULT_ERROR_CODE).send({ message: 'Ошибка по умолчанию.' });
+      return res.status(DEFAULT_ERROR_CODE).send({ message: DEFAULT_ERROR_MESSAGE });
     });
 };
 
@@ -68,14 +73,14 @@ module.exports.updateAvatar = (req, res) => {
   )
     .then((user) => res.send({ data: user }))
     .catch((err) => {
-      if (err.name === 'IncorrectError') {
+      if (err.name === 'ValidationError') {
         return res
           .status(INCORRECT_ERROR_CODE)
           .send({ message: 'Переданы некорректные данные при обновлении аватара.' });
       }
-      if (err.name === 'NotFoundError') {
+      if (err.name === 'CastError') {
         return res.status(NOT_FOUND_ERROR_CODE).send({ message: 'Пользователь по указанному _id не найден.' });
       }
-      return res.status(DEFAULT_ERROR_CODE).send({ message: 'Ошибка по умолчанию.' });
+      return res.status(DEFAULT_ERROR_CODE).send({ message: DEFAULT_ERROR_MESSAGE });
     });
 };

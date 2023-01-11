@@ -1,5 +1,5 @@
 const Card = require('../models/card');
-const { INCORRECT_ERROR_CODE, NOT_FOUND_ERROR_CODE, DEFAULT_ERROR_CODE } = require('../app');
+const { INCORRECT_ERROR_CODE, NOT_FOUND_ERROR_CODE, DEFAULT_ERROR_CODE } = require('../utils/constants');
 
 module.exports.getCards = (req, res) => {
   Card.find({})
@@ -14,9 +14,7 @@ module.exports.createCard = (req, res) => {
     .then((card) => res.send({ data: card }))
     .catch((err) => {
       if (err.name === 'IncorrectError') {
-        return res
-          .status(INCORRECT_ERROR_CODE)
-          .send({ message: 'Переданы некорректные данные при создании карточки.' });
+        return res.status(INCORRECT_ERROR_CODE).send({ message: 'Переданы некорректные данные при создании карточки.' });
       }
       return res.status(DEFAULT_ERROR_CODE).send({ message: 'Ошибка по умолчанию.' });
     });
