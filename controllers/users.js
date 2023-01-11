@@ -28,16 +28,24 @@ module.exports.getUsers = (req, res) => {
 
 module.exports.getUserById = (req, res) => {
   User.findById(req.params.userId)
-    .then((user) => res.send({ data: user }))
+    .then((user) => {
+      if (user === null) {
+        return res
+          .status(NOT_FOUND_ERROR_CODE)
+          .send({ message: 'Пользователь по указанному _id не найден.' });
+      }
+      return res.send({ data: user });
+    })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res.status(INCORRECT_ERROR_CODE).send({ message: 'Переданы некорректные данные пользователя.' });
+        return res
+          .status(INCORRECT_ERROR_CODE)
+          .send({ message: 'Переданы некорректные данные пользователя.' });
       }
       if (err.name === 'CastError') {
-        return res.status(INCORRECT_ERROR_CODE).send({ message: 'Переданы некорректные данные пользователя.' });
-      }
-      if (err.message === 'NotValidId') {
-        return res.status(NOT_FOUND_ERROR_CODE).send({ message: 'Пользователь по указанному _id не найден.' });
+        return res
+          .status(NOT_FOUND_ERROR_CODE)
+          .send({ message: 'Пользователь по указанному _id не найден.' });
       }
       return res.status(DEFAULT_ERROR_CODE).send({ message: DEFAULT_ERROR_MESSAGE });
     });
@@ -61,7 +69,9 @@ module.exports.updateUser = (req, res) => {
           .send({ message: 'Переданы некорректные данные при обновлении профиля.' });
       }
       if (err.name === 'CastError') {
-        return res.status(NOT_FOUND_ERROR_CODE).send({ message: 'Пользователь по указанному _id не найден.' });
+        return res
+          .status(NOT_FOUND_ERROR_CODE)
+          .send({ message: 'Пользователь по указанному _id не найден.' });
       }
       return res.status(DEFAULT_ERROR_CODE).send({ message: DEFAULT_ERROR_MESSAGE });
     });
@@ -85,7 +95,9 @@ module.exports.updateAvatar = (req, res) => {
           .send({ message: 'Переданы некорректные данные при обновлении аватара.' });
       }
       if (err.name === 'CastError') {
-        return res.status(NOT_FOUND_ERROR_CODE).send({ message: 'Пользователь по указанному _id не найден.' });
+        return res
+          .status(NOT_FOUND_ERROR_CODE)
+          .send({ message: 'Пользователь по указанному _id не найден.' });
       }
       return res.status(DEFAULT_ERROR_CODE).send({ message: DEFAULT_ERROR_MESSAGE });
     });
