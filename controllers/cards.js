@@ -8,7 +8,6 @@ const {
 
 module.exports.getCards = (req, res) => {
   Card.find({})
-    .populate('owner')
     .then((card) => res.send({ data: card }))
     .catch(() => res.status(DEFAULT_ERROR_CODE).send({ message: DEFAULT_ERROR_MESSAGE }));
 };
@@ -43,9 +42,12 @@ module.exports.putLike = (req, res) => {
     .then((card) => res.send({ data: card }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res.status(INCORRECT_ERROR_CODE).send({ message: 'Переданы некорректные данные для постановки лайка.' });
+        return res.status(INCORRECT_ERROR_CODE).send({ message: 'Переданы некорректные данные для снятия лайка.' });
       }
       if (err.name === 'CastError') {
+        return res.status(INCORRECT_ERROR_CODE).send({ message: 'Переданы некорректные данные для снятия лайка.' });
+      }
+      if (err.name === 'NotValidId') {
         return res.status(NOT_FOUND_ERROR_CODE).send({ message: 'Передан несуществующий _id карточки.' });
       }
       return res.status(DEFAULT_ERROR_CODE).send({ message: DEFAULT_ERROR_MESSAGE });
@@ -60,6 +62,9 @@ module.exports.deleteLike = (req, res) => {
         return res.status(INCORRECT_ERROR_CODE).send({ message: 'Переданы некорректные данные для снятия лайка.' });
       }
       if (err.name === 'CastError') {
+        return res.status(INCORRECT_ERROR_CODE).send({ message: 'Переданы некорректные данные для снятия лайка.' });
+      }
+      if (err.name === 'NotValidId') {
         return res.status(NOT_FOUND_ERROR_CODE).send({ message: 'Передан несуществующий _id карточки.' });
       }
       return res.status(DEFAULT_ERROR_CODE).send({ message: DEFAULT_ERROR_MESSAGE });
