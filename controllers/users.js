@@ -30,7 +30,10 @@ module.exports.getUserById = (req, res) => {
   User.findById(req.params.userId)
     .then((user) => res.send({ data: user }))
     .catch((err) => {
-      if (err.name === 'CastError') {
+      if (err.name === 'ValidationError') {
+        return res.status(INCORRECT_ERROR_CODE).send({ message: 'Переданы некорректные данные пользователя.' });
+      }
+      if (err.message === 'NotValidId') {
         return res.status(NOT_FOUND_ERROR_CODE).send({ message: 'Пользователь по указанному _id не найден.' });
       }
       return res.status(DEFAULT_ERROR_CODE).send({ message: DEFAULT_ERROR_MESSAGE });
@@ -40,7 +43,7 @@ module.exports.getUserById = (req, res) => {
 module.exports.updateUser = (req, res) => {
   const { name, about } = req.body;
   User.findByIdAndUpdate(
-    req.params.userId,
+    req.user._id,
     { name, about },
     {
       new: true,
@@ -64,7 +67,7 @@ module.exports.updateUser = (req, res) => {
 module.exports.updateAvatar = (req, res) => {
   const { avatar } = req.body;
   User.findByIdAndUpdate(
-    req.params.userId,
+    req.user._id,
     { avatar },
     {
       new: true,
