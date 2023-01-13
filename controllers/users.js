@@ -48,16 +48,11 @@ module.exports.getUserById = (req, res) => {
     });
 };
 
-module.exports.updateUser = (req, res) => {
-  const { name, about } = req.body;
-  User.findByIdAndUpdate(
-    req.user._id,
-    { name, about },
-    {
-      new: true,
-      runValidators: true,
-    },
-  )
+function updateUser(req, res, info) {
+  User.findByIdAndUpdate(req.user._id, info, {
+    new: true,
+    runValidators: true,
+  })
     .then((user) => {
       if (user === null) {
         return res.status(NOT_FOUND_ERROR_CODE).send({ message: NOT_FOUND_USER_MESSAGE });
@@ -68,34 +63,17 @@ module.exports.updateUser = (req, res) => {
       if (err instanceof mongoose.Error.ValidationError) {
         return res
           .status(INCORRECT_ERROR_CODE)
-          .send({ message: `${INCORRECT_ERROR_MESSAGE} при обновлении профиля.` });
+          .send({ message: `${INCORRECT_ERROR_MESSAGE} при обновлении информации.` });
       }
       return res.status(DEFAULT_ERROR_CODE).send({ message: DEFAULT_ERROR_MESSAGE });
     });
+}
+module.exports.updateUserInfo = (req, res) => {
+  const { name, about } = req.body;
+  updateUser(req, res, { name, about });
 };
 
 module.exports.updateAvatar = (req, res) => {
   const { avatar } = req.body;
-  User.findByIdAndUpdate(
-    req.user._id,
-    { avatar },
-    {
-      new: true,
-      runValidators: true,
-    },
-  )
-    .then((user) => {
-      if (user === null) {
-        return res.status(NOT_FOUND_ERROR_CODE).send({ message: NOT_FOUND_USER_MESSAGE });
-      }
-      return res.send({ data: user });
-    })
-    .catch((err) => {
-      if (err instanceof mongoose.Error.ValidationError) {
-        return res
-          .status(INCORRECT_ERROR_CODE)
-          .send({ message: `${INCORRECT_ERROR_MESSAGE} при обновлении аватара.` });
-      }
-      return res.status(DEFAULT_ERROR_CODE).send({ message: DEFAULT_ERROR_MESSAGE });
-    });
+  updateUser(req, res, { avatar });
 };
