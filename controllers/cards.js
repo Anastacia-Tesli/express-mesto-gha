@@ -12,6 +12,7 @@ const {
 
 module.exports.getCards = (req, res) => {
   Card.find({})
+    .populate('owner')
     .then((card) => res.send({ data: card }))
     .catch(() => res.status(DEFAULT_ERROR_CODE).send({ message: DEFAULT_ERROR_MESSAGE }));
 };
@@ -19,7 +20,6 @@ module.exports.getCards = (req, res) => {
 module.exports.createCard = (req, res) => {
   const { name, link } = req.body;
   Card.create({ name, link, owner: req.user._id })
-    .populate('owner')
     .then((card) => res.status(CREATED_CODE).send({ data: card }))
     .catch((err) => {
       if (err instanceof mongoose.Error.ValidationError) {
@@ -62,7 +62,7 @@ module.exports.putLike = (req, res) => {
       if (err instanceof mongoose.Error.CastError) {
         return res
           .status(INCORRECT_ERROR_CODE)
-          .send({ message: `${INCORRECT_ERROR_MESSAGE} для снятия лайка.` });
+          .send({ message: `${INCORRECT_ERROR_MESSAGE} для постановки лайка.` });
       }
       return res.status(DEFAULT_ERROR_CODE).send({ message: DEFAULT_ERROR_MESSAGE });
     });
