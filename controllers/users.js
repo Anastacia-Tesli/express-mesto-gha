@@ -1,20 +1,24 @@
+const mongoose = require('mongoose');
 const User = require('../models/user');
 const {
+  CREATED_CODE,
   INCORRECT_ERROR_CODE,
   NOT_FOUND_ERROR_CODE,
   DEFAULT_ERROR_CODE,
+  NOT_FOUND_USER_MESSAGE,
+  INCORRECT_ERROR_MESSAGE,
   DEFAULT_ERROR_MESSAGE,
 } = require('../utils/constants');
 
 module.exports.createUser = (req, res) => {
   const { name, about, avatar } = req.body;
   User.create({ name, about, avatar })
-    .then((user) => res.send({ data: user }))
+    .then((user) => res.status(CREATED_CODE).send({ data: user }))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err instanceof mongoose.Error.ValidationError) {
         return res
           .status(INCORRECT_ERROR_CODE)
-          .send({ message: 'Переданы некорректные данные при создании пользователя.' });
+          .send({ message: `${INCORRECT_ERROR_MESSAGE} при создании пользователя.` });
       }
       return res.status(DEFAULT_ERROR_CODE).send({ message: DEFAULT_ERROR_MESSAGE });
     });
@@ -30,22 +34,15 @@ module.exports.getUserById = (req, res) => {
   User.findById(req.params.userId)
     .then((user) => {
       if (user === null) {
-        return res
-          .status(NOT_FOUND_ERROR_CODE)
-          .send({ message: 'Пользователь по указанному _id не найден.' });
+        return res.status(NOT_FOUND_ERROR_CODE).send({ message: NOT_FOUND_USER_MESSAGE });
       }
       return res.send({ data: user });
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err instanceof mongoose.Error.CastError) {
         return res
           .status(INCORRECT_ERROR_CODE)
-          .send({ message: 'Переданы некорректные данные пользователя.' });
-      }
-      if (err.name === 'CastError') {
-        return res
-          .status(INCORRECT_ERROR_CODE)
-          .send({ message: 'Переданы некорректные данные пользователя.' });
+          .send({ message: `${INCORRECT_ERROR_MESSAGE} пользователя.` });
       }
       return res.status(DEFAULT_ERROR_CODE).send({ message: DEFAULT_ERROR_MESSAGE });
     });
@@ -61,17 +58,17 @@ module.exports.updateUser = (req, res) => {
       runValidators: true,
     },
   )
-    .then((user) => res.send({ data: user }))
+    .then((user) => {
+      if (user === null) {
+        return res.status(NOT_FOUND_ERROR_CODE).send({ message: NOT_FOUND_USER_MESSAGE });
+      }
+      return res.send({ data: user });
+    })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err instanceof mongoose.Error.ValidationError) {
         return res
           .status(INCORRECT_ERROR_CODE)
-          .send({ message: 'Переданы некорректные данные при обновлении профиля.' });
-      }
-      if (err.name === 'CastError') {
-        return res
-          .status(NOT_FOUND_ERROR_CODE)
-          .send({ message: 'Пользователь по указанному _id не найден.' });
+          .send({ message: `${INCORRECT_ERROR_MESSAGE} при обновлении профиля.` });
       }
       return res.status(DEFAULT_ERROR_CODE).send({ message: DEFAULT_ERROR_MESSAGE });
     });
@@ -87,17 +84,17 @@ module.exports.updateAvatar = (req, res) => {
       runValidators: true,
     },
   )
-    .then((user) => res.send({ data: user }))
+    .then((user) => {
+      if (user === null) {
+        return res.status(NOT_FOUND_ERROR_CODE).send({ message: NOT_FOUND_USER_MESSAGE });
+      }
+      return res.send({ data: user });
+    })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err instanceof mongoose.Error.ValidationError) {
         return res
           .status(INCORRECT_ERROR_CODE)
-          .send({ message: 'Переданы некорректные данные при обновлении аватара.' });
-      }
-      if (err.name === 'CastError') {
-        return res
-          .status(NOT_FOUND_ERROR_CODE)
-          .send({ message: 'Пользователь по указанному _id не найден.' });
+          .send({ message: `${INCORRECT_ERROR_MESSAGE} при обновлении аватара.` });
       }
       return res.status(DEFAULT_ERROR_CODE).send({ message: DEFAULT_ERROR_MESSAGE });
     });
