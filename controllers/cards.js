@@ -49,8 +49,8 @@ module.exports.deleteCardById = (req, res) => {
     });
 };
 
-module.exports.putLike = (req, res) => {
-  Card.findByIdAndUpdate(req.params.cardId, { $addToSet: { likes: req.user._id } }, { new: true })
+function modifyLike(req, res, action) {
+  Card.findByIdAndUpdate(req.params.cardId, action, { new: true })
     .populate('likes')
     .then((card) => {
       if (card === null) {
@@ -62,27 +62,15 @@ module.exports.putLike = (req, res) => {
       if (err instanceof mongoose.Error.CastError) {
         return res
           .status(INCORRECT_ERROR_CODE)
-          .send({ message: `${INCORRECT_ERROR_MESSAGE} для постановки лайка.` });
+          .send({ message: `${INCORRECT_ERROR_MESSAGE} для лайка.` });
       }
       return res.status(DEFAULT_ERROR_CODE).send({ message: DEFAULT_ERROR_MESSAGE });
     });
+}
+module.exports.putLike = (req, res) => {
+  modifyLike(req, res, { $addToSet: { likes: req.user._id } });
 };
 
 module.exports.deleteLike = (req, res) => {
-  Card.findByIdAndUpdate(req.params.cardId, { $pull: { likes: req.user._id } }, { new: true })
-    .populate('likes')
-    .then((card) => {
-      if (card === null) {
-        return res.status(NOT_FOUND_ERROR_CODE).send({ message: NOT_FOUND_CARD_MESSAGE });
-      }
-      return res.send({ data: card });
-    })
-    .catch((err) => {
-      if (err instanceof mongoose.Error.CastError) {
-        return res
-          .status(INCORRECT_ERROR_CODE)
-          .send({ message: `${INCORRECT_ERROR_MESSAGE} для снятия лайка.` });
-      }
-      return res.status(DEFAULT_ERROR_CODE).send({ message: DEFAULT_ERROR_MESSAGE });
-    });
+  modifyLike(req, res, { $pull: { likes: req.user._id } });
 };
