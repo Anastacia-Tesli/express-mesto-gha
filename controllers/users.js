@@ -1,79 +1,164 @@
+/* eslint-disable object-curly-newline */
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const {
   CREATED_CODE,
-  INCORRECT_ERROR_CODE,
-  NOT_FOUND_ERROR_CODE,
-  DEFAULT_ERROR_CODE,
+  AUTH_ERROR_MESSAGE,
   NOT_FOUND_USER_MESSAGE,
   INCORRECT_ERROR_MESSAGE,
-  DEFAULT_ERROR_MESSAGE,
 } = require('../utils/constants');
+const {
+  IncorrectError,
+  UnauthorizedError,
+  NotFoundError,
+  ConflictError,
+} = require('../errors/index');
 
-module.exports.createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
-  User.create({ name, about, avatar })
-    .then((user) => res.status(CREATED_CODE).send({ data: user }))
-    .catch((err) => {
-      if (err instanceof mongoose.Error.ValidationError) {
-        return res
-          .status(INCORRECT_ERROR_CODE)
-          .send({ message: `${INCORRECT_ERROR_MESSAGE} при создании пользователя.` });
+module.exports.login = (req, res, next) => {
+  const { email, password } = req.body;
+  return User.findOne({ email })
+    .select('+password')
+    .then((user) => {
+      if (!user) {
+        throw new UnauthorizedError(AUTH_ERROR_MESSAGE);
       }
-      return res.status(DEFAULT_ERROR_CODE).send({ message: DEFAULT_ERROR_MESSAGE });
+      return bcrypt.compare(password, user.password).then((matched) => {
+        if (!matched) {
+          throw new UnauthorizedError(AUTH_ERROR_MESSAGE);
+        }
+        return user;
+      });
+    })
+    .then((user) => {
+      const token = jwt.sign(
+        {
+          _id: user._id,
+        },
+        'some-secret-key',
+        {
+          expiresIn: '7d',
+        },
+      );
+      res.send({
+        token,
+      });
+    })
+    .catch((err) => {
+      next(new UnauthorizedError('Ошибка авторизации'));
+      next(err);
     });
 };
 
-module.exports.getUsers = (req, res) => {
-  User.find({})
-    .then((user) => res.send({ data: user }))
-    .catch(() => res.status(DEFAULT_ERROR_CODE).send({ message: DEFAULT_ERROR_MESSAGE }));
+module.exports.createUser = (req, res, next) => {
+  const { name, about, avatar, email } = req.body;
+  bcrypt
+    .hash(req.body.password, 10)
+    .then((hash) => {
+      User.create({
+        name,
+        about,
+        avatar,
+        email,
+        password: hash,
+      });
+    })
+    .then((user) => {
+      res.status(CREATED_CODE).send({
+        user,
+      });
+    })
+    .catch((err) => {
+      if (err.code === 11000) {
+        next(
+          new ConflictError('Пользователь с таким email уже зарегистрирован'),
+        );
+      }
+      if (err instanceof mongoose.Error.ValidationError) {
+        next(
+          new IncorrectError(
+            `${INCORRECT_ERROR_MESSAGE} при создании пользователя.`,
+          ),
+        );
+      }
+      next(err);
+    });
 };
 
-module.exports.getUserById = (req, res) => {
+module.exports.getUser = (req, res, next) => {
+  User.findById(req.user._id)
+    .then((user) => {
+      res.send({
+        user,
+      });
+    })
+    .catch(next);
+};
+
+module.exports.getUsers = (req, res, next) => {
+  User.find({})
+    .then((users) => {
+      res.send({
+        data: users,
+      });
+    })
+    .catch(next);
+};
+
+module.exports.getUserById = (req, res, next) => {
   User.findById(req.params.userId)
     .then((user) => {
       if (user === null) {
-        return res.status(NOT_FOUND_ERROR_CODE).send({ message: NOT_FOUND_USER_MESSAGE });
+        throw new NotFoundError(NOT_FOUND_USER_MESSAGE);
       }
-      return res.send({ data: user });
+      return res.send({
+        data: user,
+      });
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.CastError) {
-        return res
-          .status(INCORRECT_ERROR_CODE)
-          .send({ message: `${INCORRECT_ERROR_MESSAGE} пользователя.` });
+        next(new IncorrectError(`${INCORRECT_ERROR_MESSAGE} пользователя.`));
       }
-      return res.status(DEFAULT_ERROR_CODE).send({ message: DEFAULT_ERROR_MESSAGE });
+      return next(err);
     });
 };
 
-function updateUser(req, res, info) {
+function updateUser(req, res, next, info) {
   User.findByIdAndUpdate(req.user._id, info, {
     new: true,
     runValidators: true,
   })
     .then((user) => {
       if (user === null) {
-        return res.status(NOT_FOUND_ERROR_CODE).send({ message: NOT_FOUND_USER_MESSAGE });
+        throw new NotFoundError(NOT_FOUND_USER_MESSAGE);
       }
-      return res.send({ data: user });
+      return res.send({
+        data: user,
+      });
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.ValidationError) {
-        return res
-          .status(INCORRECT_ERROR_CODE)
-          .send({ message: `${INCORRECT_ERROR_MESSAGE} при обновлении информации.` });
+        next(
+          new IncorrectError(
+            `${INCORRECT_ERROR_MESSAGE} при обновлении информации.`,
+          ),
+        );
       }
-      return res.status(DEFAULT_ERROR_CODE).send({ message: DEFAULT_ERROR_MESSAGE });
+      return next(err);
     });
 }
-module.exports.updateUserInfo = (req, res) => {
+module.exports.updateUserInfo = (req, res, next) => {
   const { name, about } = req.body;
-  updateUser(req, res, { name, about });
+  updateUser(req, res, next, {
+    name,
+    about,
+  });
 };
 
-module.exports.updateAvatar = (req, res) => {
+module.exports.updateAvatar = (req, res, next) => {
   const { avatar } = req.body;
-  updateUser(req, res, { avatar });
+  updateUser(req, res, next, {
+    avatar,
+  });
 };
