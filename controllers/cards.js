@@ -1,15 +1,7 @@
 const mongoose = require('mongoose');
 const Card = require('../models/card');
-const {
-  CREATED_CODE,
-  NOT_FOUND_CARD_MESSAGE,
-  INCORRECT_ERROR_MESSAGE,
-} = require('../utils/constants');
-const {
-  IncorrectError,
-  ForbiddenError,
-  NotFoundError,
-} = require('../errors/index');
+const { CREATED_CODE, NOT_FOUND_CARD_MESSAGE, INCORRECT_ERROR_MESSAGE } = require('../utils/constants');
+const { IncorrectError, ForbiddenError, NotFoundError } = require('../errors/index');
 
 module.exports.getCards = (req, res, next) => {
   Card.find({})
@@ -24,11 +16,7 @@ module.exports.createCard = (req, res, next) => {
     .then((card) => res.status(CREATED_CODE).send({ data: card }))
     .catch((err) => {
       if (err instanceof mongoose.Error.ValidationError) {
-        next(
-          new IncorrectError(
-            `${INCORRECT_ERROR_MESSAGE} при создании карточки.`,
-          ),
-        );
+        next(new IncorrectError(`${INCORRECT_ERROR_MESSAGE} при создании карточки.`));
       }
       return next(err);
     });

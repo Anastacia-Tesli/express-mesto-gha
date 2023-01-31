@@ -41,20 +41,17 @@ module.exports.login = (req, res, next) => {
           expiresIn: '7d',
         },
       );
-      res.send({
+      return res.send({
         token,
       });
     })
-    .catch((err) => {
-      next(new UnauthorizedError('Ошибка авторизации'));
-      next(err);
-    });
+    .catch(next);
 };
 
 module.exports.createUser = (req, res, next) => {
-  const { name, about, avatar, email } = req.body;
+  const { name, about, avatar, email, password } = req.body;
   bcrypt
-    .hash(req.body.password, 10)
+    .hash(password, 10)
     .then((hash) => {
       User.create({
         name,
@@ -65,24 +62,16 @@ module.exports.createUser = (req, res, next) => {
       });
     })
     .then((user) => {
-      res.status(CREATED_CODE).send({
-        user,
-      });
+      res.status(CREATED_CODE).send({ user });
     })
     .catch((err) => {
-      if (err.code === 11000) {
-        next(
-          new ConflictError('Пользователь с таким email уже зарегистрирован'),
-        );
-      }
       if (err instanceof mongoose.Error.ValidationError) {
-        next(
-          new IncorrectError(
-            `${INCORRECT_ERROR_MESSAGE} при создании пользователя.`,
-          ),
-        );
+        next(new IncorrectError(`${INCORRECT_ERROR_MESSAGE} при создании пользователя.`));
       }
-      next(err);
+      if (err.code === 11000) {
+        next(new ConflictError('Пользователь с таким email уже зарегистрирован'));
+      }
+      return next(err);
     });
 };
 
@@ -139,11 +128,7 @@ function updateUser(req, res, next, info) {
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.ValidationError) {
-        next(
-          new IncorrectError(
-            `${INCORRECT_ERROR_MESSAGE} при обновлении информации.`,
-          ),
-        );
+        next(new IncorrectError(`${INCORRECT_ERROR_MESSAGE} при обновлении информации.`));
       }
       return next(err);
     });
