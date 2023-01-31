@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
 const Card = require('../models/card');
-const { CREATED_CODE, NOT_FOUND_CARD_MESSAGE, INCORRECT_ERROR_MESSAGE } = require('../utils/constants');
+const {
+  CREATED_CODE,
+  NOT_FOUND_CARD_MESSAGE,
+  INCORRECT_ERROR_MESSAGE,
+} = require('../utils/constants');
 const { IncorrectError, ForbiddenError, NotFoundError } = require('../errors/index');
 
 module.exports.getCards = (req, res, next) => {
@@ -28,7 +32,7 @@ module.exports.deleteCardById = (req, res, next) => {
       if (card === null) {
         throw new NotFoundError(NOT_FOUND_CARD_MESSAGE);
       }
-      if (card.owner !== req.user._id) {
+      if (card.owner.toString() !== req.user._id) {
         throw new ForbiddenError('Доступ запрещен');
       }
       return res.send({ data: card });
