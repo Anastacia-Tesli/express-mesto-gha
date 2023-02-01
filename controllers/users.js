@@ -69,7 +69,7 @@ module.exports.createUser = (req, res, next) => {
           });
         })
         .then(() => {
-          res.status(CREATED_CODE).send({ email });
+          res.status(CREATED_CODE).send({ name, about, avatar, email });
         })
         .catch((err) => {
           if (err instanceof mongoose.Error.ValidationError) {
