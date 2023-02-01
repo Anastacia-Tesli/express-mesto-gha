@@ -68,8 +68,8 @@ module.exports.createUser = (req, res, next) => {
             password: hash,
           });
         })
-        .then((user) => {
-          res.status(CREATED_CODE).send({ data: user });
+        .then(() => {
+          res.status(CREATED_CODE).send({ email });
         })
         .catch((err) => {
           if (err instanceof mongoose.Error.ValidationError) {
