@@ -2,7 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const { celebrate, Joi, errors } = require('celebrate');
 const { login, createUser } = require('./controllers/users');
-const { NOT_FOUND_ERROR_CODE } = require('./utils/constants');
+
+const { NotFoundError } = require('./errors/index');
 const { auth } = require('./middlewares/auth');
 const { handleError } = require('./middlewares/errors');
 
@@ -46,10 +47,8 @@ app.use(auth);
 app.use('/users', require('./routes/users'));
 app.use('/cards', require('./routes/cards'));
 
-app.use((req, res) => {
-  res
-    .status(NOT_FOUND_ERROR_CODE)
-    .send({ message: '404. Такой страницы не существует.' });
+app.use((req, res, next) => {
+  next(new NotFoundError('404. Такой страницы не существует.'));
 });
 app.use(errors());
 app.use(handleError);

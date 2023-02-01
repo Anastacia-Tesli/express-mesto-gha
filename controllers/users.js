@@ -50,29 +50,38 @@ module.exports.login = (req, res, next) => {
 
 module.exports.createUser = (req, res, next) => {
   const { name, about, avatar, email, password } = req.body;
-  bcrypt
-    .hash(password, 10)
-    .then((hash) => {
-      User.create({
-        name,
-        about,
-        avatar,
-        email,
-        password: hash,
-      });
-    })
+  return User.findOne({ email })
     .then((user) => {
-      res.status(CREATED_CODE).send({ user });
+      if (user !== null) {
+        throw new ConflictError('Пользователь с таким email уже зарегистрирован');
+      }
     })
-    .catch((err) => {
-      if (err instanceof mongoose.Error.ValidationError) {
-        next(new IncorrectError(`${INCORRECT_ERROR_MESSAGE} при создании пользователя.`));
-      }
-      if (err.code === 11000) {
-        next(new ConflictError('Пользователь с таким email уже зарегистрирован'));
-      }
-      return next(err);
-    });
+    .then(() => {
+      bcrypt
+        .hash(password, 10)
+        .then((hash) => {
+          User.create({
+            name,
+            about,
+            avatar,
+            email,
+            password: hash,
+          });
+        })
+        .then((user) => {
+          res.status(CREATED_CODE).send({ data: user });
+        })
+        .catch((err) => {
+          if (err instanceof mongoose.Error.ValidationError) {
+            next(new IncorrectError(`${INCORRECT_ERROR_MESSAGE} при создании пользователя.`));
+          }
+          if (err.code === 11000) {
+            next();
+          }
+          next(err);
+        });
+    })
+    .catch(next);
 };
 
 module.exports.getUser = (req, res, next) => {
