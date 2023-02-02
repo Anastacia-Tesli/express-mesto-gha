@@ -36,7 +36,7 @@ module.exports.login = (req, res, next) => {
         {
           _id: user._id,
         },
-        'some-secret-key',
+        process.env.JWTKEY,
         {
           expiresIn: '7d',
         },
