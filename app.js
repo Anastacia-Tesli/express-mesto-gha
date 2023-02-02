@@ -14,10 +14,15 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-mongoose.connect(process.env.MONGOPATH, {
+const MONGOPATH = process.env.MONGOPATH || 'mongodb://127.0.0.1:27017/mestodb';
+mongoose.connect(MONGOPATH, {
   useNewUrlParser: true,
 });
 mongoose.set('strictQuery', true);
+
+if (!process.env.JWTKEY) {
+  process.env.JWTKEY = 'secretkeyfrommesto';
+}
 
 app.post(
   '/signin',
