@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const { default: isUrl } = require('validator/lib/isURL');
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -18,7 +17,9 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
     validate: {
-      validator: (v) => isUrl(v),
+      validator: (v) => {
+        /^(https?:\/\/)(www.)?[^\s]+(#?)$/i.test(v);
+      },
       message: 'Некорректный формат ссылки',
     },
   },
